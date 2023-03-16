@@ -28,10 +28,16 @@
         'views/views.xml',
         'views/templates.xml',
     ],
+
+    # 'assets': {
+    # 'web.assets_backend': ['music_player/app.js']
+    # },
+
     # only loaded in demonstration mode
     'demo': [
         'demo/demo.xml',
     ],
-    'installable': True,
-    'application': True,
+    
+    'installation' : True,
+    'application' : True
 }

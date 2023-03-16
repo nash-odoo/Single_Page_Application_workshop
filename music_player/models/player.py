@@ -8,9 +8,9 @@ class music_player(models.Model):
     _description = 'music_player.music_player'
 
     name = fields.Char('Song Name')
-    filename = fields.Char("File name")
-    url = fields.Char(compute="_compute_url") # for a computed url
-    
+    filename = fields.Char('File Name')
+    url = fields.Char(compute="_compute_url")
+
     def _compute_url(self):
         for record in self:
             record.url = record.get_base_url() + '/music/' + str(record.id)

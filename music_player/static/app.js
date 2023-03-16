@@ -1,96 +1,114 @@
 /** @odoo-module**/
 
-const { Component, xml, mount, setup, useState }  = owl;
+const { Component, mount, xml, useState } = owl;
 
 let audio = '';
+
+class PlayList extends Component {
+    static template = xml`
+    <div style="position:absolute;right:5px">
+    <h2>Playlist</h2>
+    <t t-if="props.playlistData">
+        <div>
+        <t t-foreach="props.playlistData" t-as="song" t-key="song.id">
+        <p><t t-out="song.name"/></p>
+        <button id="play-btn" t-on-click="playThisSong">Play</button>
+        
+    </t>
+        </div>
+        </t>
+    </div>
+    `;
+    playThisSong() {
+        if (!audio) {
+            return;
+        }
+        console.log("p")
+        audio.play();
+    }
+
+    static props = ["playlistData"];
+}
 class Player extends Component {
     static template = xml`
-        <div style="position:absolute;bottom:0px">
-            <h2 id="song-title">Song Title</h2>
-            <div>
-                <button id="pause-button" t-on-click="pauseThisSong">Pause</button>
-                <button id="play_btn" t-on-click="playThisSong">Play</button>
-                <button id="stop-button" t-on-click="stopThisSong">Stop</button>
-            </div>
-        </div>`;
+    <div style="position:absolute;bottom:20px;background-color:green">
+        <h2 id="song-title">Song Title</h2>
+        <div>
+            <button id="pause-button" t-on-click="pauseThisSong">Pause</button>
+            <button id="play-btn" t-on-click="playThisSong">Play</button>
+            <button id="stop-button" t-on-click="stopThisSong">Stop</button>
+        </div>
+    </div>
+    `;
 
-            playThisSong() {
-            if (!audio) {
-              return;
-            }
-            audio.play();
-          }
-          pauseThisSong() {
-            if (!audio) {
-              return;
-            }
-            audio.pause();
-          }
-          stopThisSong() {
-            if (!audio) {
-              return;
-            }
-            audio.pause();
-            audio.currentTime = 0;
+    pauseThisSong() {
+        if (!audio) {
+            return;
         }
+        audio.pause();
+    }
+    playThisSong() {
+        if (!audio) {
+            return;
+        }
+        audio.play();
+    }
+    stopThisSong() {
+        if (!audio) {
+            return;
+        }
+        audio.pause();
+        audio.currentTime = 0;
+    }
 }
 
-// class PlayList extends Component {
-//     static template = xml`
-//         <div style="float:right">
-
-//         </div>
-//         `;
-
-// }
-
-class MusicList extends Component {
+class Musiclist extends Component {
     static template = xml`
-        <div id="MusicList" style="float:left">
-        <t t-if="props.searchData[0] and props.searchData[0] !== 'Song not Found'">
-        <h2>List of Songs</h2>
-        <t t-foreach="props.searchData[0]" t-as="song" t-key="song.id">
-            <p><t t-out="song.name"/></p>
-            <button t-att-value="song.url" t-on-click="addSongToPlaylist">Add to playlist</button>
-            <button t-att-value="song.url" t-on-click="playSong">Play song</button>
-        </t>
-        </t>
-        <Player/>
-        </div>
-        `;
+                        <div id="Musiclist" style="float: left">
+                            <t t-if="props.searchData[0] and props.searchData[0] !== 'Song not Found'">
+                                <h2>List of Songs</h2>
+                                <t t-foreach="props.searchData[0]" t-as="song" t-key="song.id">
+                                    <p><t t-out="song.name"/></p>
+                                    <button t-att-value="song.url" t-on-click="addSongToPlaylist">Add to playlist</button>
+                                    <button t-att-value="song.url" t-on-click="playSong">Play Song</button>
+                                </t>
+                            </t>
+                            <Player />
+                            <PlayList playlistData="playlistData"/>
+                        </div>
+                        `;
 
-        addSongToPlaylist () {
-            //TAsk:
-            // add Playlist component as the child of root component and when addSongToPlaylist method is called update the 
-            //PlayList component template with the song thats added.
-            // hint use callback method as which update the props u are passing to PlayList component.
-        }
+    setup() {
+        this.playlistData = useState([]);
+    }
+    playSong(ev) {
+        const selectedSongUrl = ev.target.getAttribute('value');
+        const selectedSong = this.props.searchData[0].find(song => song.url === selectedSongUrl);
+        document.getElementById('song-title').textContent = selectedSong.name;
+        audio = new Audio(selectedSongUrl)
+        audio.play();
+    }
 
-        playSong(ev) {
-            // in case a audio is already playing stop it to play another.
-            if (audio) {
-              audio.pause();
-              audio.currentTime = 0;
-            }
-              const selectedSongUrl = ev.target.getAttribute('value');
-              const selectedSong = this.props.searchData[0].find(song => song.url === selectedSongUrl);
-              document.getElementById('song-title').textContent = selectedSong.name;
-              audio = new Audio(selectedSongUrl);
-              audio.play();
-          }
-    static props = ['searchData'];
-
-    static components = { Player }; 
+    addSongToPlaylist(ev) {
+        const addedSongUrl = ev.target.getAttribute('value');
+        const addedSong = this.props.searchData[0].find(song => song.url === addedSongUrl);
+        this.playlistData.push(addedSong);
+        audio = new Audio(addedSongUrl)
+        console.log(this.playlistData);
+    }
+    static props = ["searchData"];
+    static components = { Player, PlayList }
 }
 
 class Search extends Component {
-    static template = xml `
+    static template = xml`
     <div style="text-align:center">
-            <input type="text" id="searchSong" placeholder="Search a music" value="Akon"/>
-            <button t-on-click="getMusic" id="SearchButton">Search</button>
-            <MusicList searchData="searchData"/>
+        <input type="text" style="border:1px solid black;" id="searchSong" placeholder="Search a music" value="Akon"/>
+        <button t-on-click="getMusic" id="SearchButton">Search</button>
+        <Musiclist searchData="searchData"/>
     </div>
     `;
+
     setup() {
         this.searchData = useState([]);
     }
@@ -98,32 +116,23 @@ class Search extends Component {
     async getMusic() {
         const findSong = document.getElementById('searchSong').value;
         const response = await fetch(`/music/search?song_name=${findSong}`);
-        const {result : newData}= await response.json();
-        this.searchData.pop(); // add pop to remove previously searched data.
-        this.searchData.push(newData);
+        const { result: response_data } = await response.json();
+        console.log(response_data)
+        this.searchData.push(response_data);
     }
-
-    static components = { MusicList }
+    static components = { Musiclist };
 }
 
-class Root extends Component { // import from owl
-    // import from owl
-    static template = xml ` 
-    <style>
-    body {
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-    }
-    </style>
-    <div id="Container" style="position:relative;height:100%">
-        <Search/>
+class Root extends Component {
+    static template = xml`
+    <div>
+    <Search />
     </div>
     `;
 
-    static components = { Search }; 
+    static components = { Search }
 }
 
-window.onload = function() {
-    mount(Root, document.body);
-};
+window.onload = function () {
+    mount(Root, document.body)
+}
